@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRCI - Cut Through the Noise</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 900px; /* Constrain width */
+            height: 100vh;
+            max-height: 1200px; /* Also constrain height for better proportions */
+            position: relative;
+            background: #000;
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.8); /* Add shadow for definition */
+        }
+
+        /* Scene 1: Chaos */
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scene.active {
+            opacity: 1;
+        }
+
+        .chaos-scene {
+            background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
+        }
+
+        .news-ticker {
+            position: absolute;
+            width: 100%;
+            overflow: hidden;
+            background: rgba(220, 38, 38, 0.9);
+            padding: 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+
+        .ticker-top {
+            top: 10%;
+            animation: tickerScrollLeft 15s linear infinite;
+        }
+
+        .ticker-middle {
+            top: 50%;
+            animation: tickerScrollRight 12s linear infinite;
+            background: rgba(234, 179, 8, 0.9);
+        }
+
+        .ticker-bottom {
+            bottom: 10%;
+            animation: tickerScrollLeft 18s linear infinite;
+            background: rgba(37, 99, 235, 0.9);
+        }
+
+        @keyframes tickerScrollLeft {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        @keyframes tickerScrollRight {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .ticker-content {
+            white-space: nowrap;
+            display: inline-block;
+            padding-left: 100%;
+        }
+
+        /* Flashing numbers */
+        .numbers-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 20px;
+            padding: 60px;
+            opacity: 0.6;
+        }
+
+        .number-item {
+            font-family: 'Space Grotesk', monospace;
+            font-size: clamp(24px, 3vw, 48px);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: flash 0.5s infinite;
+        }
+
+        .number-item.red {
+            color: #ef4444;
+            animation-delay: 0s;
+        }
+
+        .number-item.green {
+            color: #10b981;
+            animation-delay: 0.1s;
+        }
+
+        .number-item.yellow {
+            color: #f59e0b;
+            animation-delay: 0.2s;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Glitch overlay */
+        .glitch-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255, 0, 0, 0.1) 0px,
+                transparent 2px,
+                transparent 4px,
+                rgba(0, 255, 0, 0.1) 4px,
+                transparent 6px
+            );
+            pointer-events: none;
+            animation: glitchScan 0.3s infinite;
+        }
+
+        @keyframes glitchScan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(10px); }
+        }
+
+        /* Chaos text */
+        .chaos-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(28px, 5vw, 60px); /* Smaller so background shows */
+            font-weight: 900;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            animation: shake 0.3s infinite, colorShift 1s infinite;
+            z-index: 10;
+            text-align: center;
+            text-shadow: 
+                2px 2px 0 #ef4444,
+                -2px -2px 0 #3b82f6,
+                0 0 30px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-48%, -52%) rotate(-1deg); }
+            75% { transform: translate(-52%, -48%) rotate(1deg); }
+        }
+
+        @keyframes colorShift {
+            0% { color: white; }
+            33% { color: #ef4444; }
+            66% { color: #f59e0b; }
+            100% { color: white; }
+        }
+
+        /* Scene 2: Transition */
+        .transition-scene {
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+        }
+
+        .silence-text {
+            font-size: clamp(30px, 6vw, 80px);
+            font-weight: 300;
+            color: white;
+            text-align: center;
+            animation: fadeInScale 1s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Scene 3: IRCI Reveal */
+        .irci-scene {
+            background: linear-gradient(135deg, #0a1628 0%, #1a2942 100%);
+            flex-direction: column;
+        }
+
+        .irci-logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(60px, 12vw, 180px);
+            font-weight: 700;
+            background: linear-gradient(135deg, #d4af37 0%, #f4d883 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+            animation: fadeInUp 1s ease-out;
+            text-shadow: 0 10px 40px rgba(212, 175, 55, 0.3);
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .irci-tagline {
+            font-size: clamp(18px, 3vw, 36px);
+            font-weight: 300;
+            color: #e5e7eb;
+            text-align: center;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            animation: fadeInUp 1s ease-out 0.3s backwards;
+            margin-bottom: 60px;
+        }
+
+        /* Mini dials preview */
+        .dials-preview {
+            display: flex;
+            gap: 40px;
+            animation: fadeInUp 1s ease-out 0.6s backwards;
+        }
+
+        .mini-dial {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dial-icon {
+            font-size: clamp(40px, 6vw, 60px);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .dial-icon:nth-child(1) { animation-delay: 0s; }
+        .dial-icon:nth-child(2) { animation-delay: 0.5s; }
+        .dial-icon:nth-child(3) { animation-delay: 1s; }
+        .dial-icon:nth-child(4) { animation-delay: 1.5s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .dial-label {
+            font-size: clamp(12px, 2vw, 18px);
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Scene 4: CTA */
+        .cta-scene {
+            background: linear-gradient(135deg, #0a1628 0%, #1a2942 100%);
+            flex-direction: column;
+        }
+
+        .cta-text {
+            font-size: clamp(24px, 4vw, 48px);
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .cta-subtext {
+            font-size: clamp(16px, 2.5vw, 28px);
+            font-weight: 300;
+            color: #9ca3af;
+            text-align: center;
+            animation: fadeInUp 1s ease-out 0.3s backwards;
+        }
+
+        .copyright {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 8px;
+            color: #4b5563;
+            padding: 0 15px;
+            line-height: 1.3;
+            animation: fadeIn 1s ease-out 1s backwards;
+        }
+
+        .irci-logo-icon {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            opacity: 0.9;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 0.9; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Replay button */
+        .replay-btn {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            background: rgba(212, 175, 55, 0.2);
+            border: 2px solid #d4af37;
+            color: #d4af37;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+            display: none;
+        }
+
+        .replay-btn.show {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .replay-btn:hover {
+            background: rgba(212, 175, 55, 0.4);
+            transform: scale(1.05);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Sound indicator */
+        .sound-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            z-index: 100;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="video-container">
+        <div class="sound-indicator">🔊 Sound On</div>
+
+        <!-- Scene 1: Chaos -->
+        <div class="scene chaos-scene active" id="scene1">
+            <!-- News tickers with IR strategic questions -->
+            <div class="news-ticker ticker-top">
+                <div class="ticker-content">
+                    CFO ASKS: IS IR WORTH THE BUDGET? • CEO: NEED BETTER ANALYST COVERAGE • BOARD: PROVE IR ROI • VP: SHOULD WE HIRE MORE STAFF? • CMO: VALUATION GAP TOO WIDE • CFO ASKS: IS IR WORTH THE BUDGET? •
+                </div>
+            </div>
+            <div class="news-ticker ticker-middle">
+                <div class="ticker-content">
+                    INVESTOR DAY OR ROAD SHOW? • WHICH CONFERENCES TO ATTEND? • HOW TO IMPROVE LIQUIDITY? • MESSAGING NOT LANDING • NEED MORE VISIBILITY • CREDIBILITY CONCERNS • INVESTOR DAY OR ROAD SHOW? •
+                </div>
+            </div>
+            <div class="news-ticker ticker-bottom">
+                <div class="ticker-content">
+                    IR BUDGET UNDER REVIEW • COMPETING FOR RESOURCES • WHICH METRICS MATTER? • QUARTERLY GUIDANCE DEBATE • ESG REPORT TIMING • WHERE TO FOCUS EFFORT? • IR BUDGET UNDER REVIEW •
+                </div>
+            </div>
+
+            <!-- Flashing C-suite IR decisions -->
+            <div class="numbers-grid">
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">INVESTOR DAY?</div>
+                <div class="number-item yellow" style="font-size: clamp(14px, 2vw, 28px);">MORE PR?</div>
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">HIRE IR FIRM?</div>
+                <div class="number-item green" style="font-size: clamp(14px, 2vw, 28px);">ROAD SHOW</div>
+                <div class="number-item yellow" style="font-size: clamp(14px, 2vw, 28px);">ANALYST DAY?</div>
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">BUDGET CUT?</div>
+                <div class="number-item green" style="font-size: clamp(14px, 2vw, 28px);">PRESS TOUR</div>
+                <div class="number-item yellow" style="font-size: clamp(14px, 2vw, 28px);">IR STRATEGY?</div>
+                
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">CONFERENCE?</div>
+                <div class="number-item green" style="font-size: clamp(14px, 2vw, 28px);">ADD STAFF?</div>
+                <div class="number-item yellow" style="font-size: clamp(14px, 2vw, 28px);">WEBSITE?</div>
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">ESG REPORT?</div>
+                <div class="number-item yellow" style="font-size: clamp(14px, 2vw, 28px);">GUIDANCE?</div>
+                <div class="number-item green" style="font-size: clamp(14px, 2vw, 28px);">TARGET INST?</div>
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">PERCEPTION?</div>
+                <div class="number-item yellow" style="font-size: clamp(14px, 2vw, 28px);">COVERAGE?</div>
+
+                <div class="number-item green" style="font-size: clamp(14px, 2vw, 28px);">MESSAGING</div>
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">LIQUIDITY?</div>
+                <div class="number-item yellow" style="font-size: clamp(14px, 2vw, 28px);">VISIBILITY?</div>
+                <div class="number-item green" style="font-size: clamp(14px, 2vw, 28px);">OUTREACH</div>
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">CREDIBILITY?</div>
+                <div class="number-item yellow" style="font-size: clamp(14px, 2vw, 28px);">SPEND MORE?</div>
+                <div class="number-item green" style="font-size: clamp(14px, 2vw, 28px);">QUARTERLY?</div>
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">WORTH IT?</div>
+
+                <div class="number-item yellow" style="font-size: clamp(14px, 2vw, 28px);">WHICH CITY?</div>
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">ROI PROOF?</div>
+                <div class="number-item green" style="font-size: clamp(14px, 2vw, 28px);">PRIORITIES?</div>
+                <div class="number-item yellow" style="font-size: clamp(14px, 2vw, 28px);">HOW MUCH?</div>
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">WHO CARES?</div>
+                <div class="number-item green" style="font-size: clamp(14px, 2vw, 28px);">METRICS?</div>
+                <div class="number-item yellow" style="font-size: clamp(14px, 2vw, 28px);">WORKING?</div>
+                <div class="number-item red" style="font-size: clamp(14px, 2vw, 28px);">GUESSING?</div>
+            </div>
+
+            <div class="glitch-overlay"></div>
+            <div class="chaos-text">WHERE TO INVEST?</div>
+        </div>
+
+        <!-- Scene 2: Transition -->
+        <div class="scene transition-scene" id="scene2">
+            <div class="silence-text">Cut through the chaos...</div>
+        </div>
+
+        <!-- Scene 3: IRCI Reveal -->
+        <div class="scene irci-scene" id="scene3">
+            <div class="irci-logo">IRCI</div>
+            <div class="irci-tagline">Investor Relations Contribution Index</div>
+            <div class="dials-preview">
+                <div class="mini-dial">
+                    <div class="dial-icon">💰</div>
+                    <div class="dial-label">Valuation</div>
+                </div>
+                <div class="mini-dial">
+                    <div class="dial-icon">💧</div>
+                    <div class="dial-label">Liquidity</div>
+                </div>
+                <div class="mini-dial">
+                    <div class="dial-icon">📊</div>
+                    <div class="dial-label">Coverage</div>
+                </div>
+                <div class="mini-dial">
+                    <div class="dial-icon">💭</div>
+                    <div class="dial-label">Trust</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scene 4: CTA -->
+        <div class="scene cta-scene" id="scene4">
+            <div style="margin-bottom: 80px;">
+                <div class="cta-text">Quantify Your IR Excellence</div>
+                <div class="cta-subtext">Four dials. One score. Clear direction.</div>
+            </div>
+            <div class="copyright">Copyright © 2025 Bonnie Rushing: Information Specialist - All Rights Reserved.<br>IRCI - Investor Relations Contribution Index, PATENT PENDING.</div>
+        </div>
+
+        <button class="replay-btn" id="replayBtn">↻ Replay</button>
+    </div>
+
+    <script>
+        // Web Audio API Setup
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let chaosNoiseNode = null;
+        let chaosOscillators = [];
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        // Create INTENSE chaos sounds (NYSE bell, crowd chatter, alerts)
+        function playChaosSound() {
+            if (!audioCtx) return;
+            
+            // NYSE Opening Bell sound (metallic bell ring)
+            playNYSEBell();
+            
+            // Intense crowd chatter simulation (MORE voices)
+            playCrowdChatter();
+            
+            // Trading floor ambiance (higher intensity white noise)
+            const bufferSize = audioCtx.sampleRate * 3;
+            const buffer = audioCtx.createBuffer(2, bufferSize, audioCtx.sampleRate); // Stereo
+            const dataL = buffer.getChannelData(0);
+            const dataR = buffer.getChannelData(1);
+            
+            for (let i = 0; i < bufferSize; i++) {
+                // More intense noise with varying amplitude
+                const intensity = 0.4 + Math.sin(i / 1000) * 0.15;
+                dataL[i] = (Math.random() * 2 - 1) * intensity;
+                dataR[i] = (Math.random() * 2 - 1) * intensity;
+            }
+            
+            chaosNoiseNode = audioCtx.createBufferSource();
+            chaosNoiseNode.buffer = buffer;
+            
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.35, audioCtx.currentTime); // Louder
+            noiseGain.gain.setValueAtTime(0.35, audioCtx.currentTime + 2.5);
+            noiseGain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 3);
+            
+            // Multiple filters for more complex sound
+            const highpass = audioCtx.createBiquadFilter();
+            highpass.type = 'highpass';
+            highpass.frequency.setValueAtTime(600, audioCtx.currentTime);
+            
+            const bandpass = audioCtx.createBiquadFilter();
+            bandpass.type = 'bandpass';
+            bandpass.frequency.setValueAtTime(1500, audioCtx.currentTime);
+            bandpass.Q.setValueAtTime(0.5, audioCtx.currentTime);
+            
+            chaosNoiseNode.connect(highpass);
+            highpass.connect(bandpass);
+            bandpass.connect(noiseGain);
+            noiseGain.connect(audioCtx.destination);
+            
+            chaosNoiseNode.start();
+            
+            // Aggressive alert beeps
+            playAlertBeeps();
+            
+            // Phone rings
+            playPhoneRings();
+            
+            // Keyboard clicks
+            playKeyboardClicks();
+            
+            // Shouting voices
+            playShoutingVoices();
+        }
+
+        // NYSE Opening Bell
+        function playNYSEBell() {
+            if (!audioCtx) return;
+            
+            // Bell strike (metallic sound) - MORE strikes
+            for (let strike = 0; strike < 6; strike++) {
+                const time = audioCtx.currentTime + strike * 0.2;
+                
+                // Multiple harmonics for metallic bell sound
+                [800, 1200, 1600, 2400, 3200].forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.frequency.setValueAtTime(freq, time);
+                    osc.type = 'sine';
+                    
+                    const volume = 0.35 / (idx + 1); // Louder
+                    gain.gain.setValueAtTime(volume, time);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc.start(time);
+                    osc.stop(time + 0.5);
+                    
+                    chaosOscillators.push(osc);
+                });
+            }
+        }
+
+        // Simulated crowd chatter (overlapping voices) - MORE VOICES
+        function playCrowdChatter() {
+            if (!audioCtx) return;
+            
+            // Create 25 "voices" with random frequencies (increased from 15)
+            for (let i = 0; i < 25; i++) {
+                const startTime = audioCtx.currentTime + Math.random() * 0.5;
+                const duration = 0.3 + Math.random() * 0.5;
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+                
+                // Human voice frequency range
+                const baseFreq = 150 + Math.random() * 300;
+                osc.frequency.setValueAtTime(baseFreq, startTime);
+                
+                // Modulate frequency for speech-like effect
+                osc.frequency.linearRampToValueAtTime(
+                    baseFreq + (Math.random() * 100 - 50),
+                    startTime + duration / 2
+                );
+                osc.frequency.linearRampToValueAtTime(
+                    baseFreq + (Math.random() * 100 - 50),
+                    startTime + duration
+                );
+                
+                osc.type = 'sawtooth';
+                
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(800 + Math.random() * 1200, startTime);
+                filter.Q.setValueAtTime(2, startTime);
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.1, startTime + 0.05); // Louder
+                gain.gain.setValueAtTime(0.1, startTime + duration - 0.1);
+                gain.gain.linearRampToValueAtTime(0.001, startTime + duration);
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+                
+                chaosOscillators.push(osc);
+            }
+        }
+
+        // Shouting voices (louder, more aggressive)
+        function playShoutingVoices() {
+            if (!audioCtx) return;
+            
+            const shoutTimes = [0.3, 0.9, 1.4, 1.9, 2.4];
+            
+            shoutTimes.forEach(startTime => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+                
+                const baseFreq = 200 + Math.random() * 200;
+                osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime + startTime);
+                osc.frequency.linearRampToValueAtTime(baseFreq + 150, audioCtx.currentTime + startTime + 0.15);
+                
+                osc.type = 'sawtooth';
+                
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1200, audioCtx.currentTime + startTime);
+                filter.Q.setValueAtTime(3, audioCtx.currentTime + startTime);
+                
+                gain.gain.setValueAtTime(0, audioCtx.currentTime + startTime);
+                gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + startTime + 0.02);
+                gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + startTime + 0.15);
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(audioCtx.currentTime + startTime);
+                osc.stop(audioCtx.currentTime + startTime + 0.15);
+                
+                chaosOscillators.push(osc);
+            });
+        }
+
+        function playAlertBeeps() {
+            if (!audioCtx) return;
+            
+            // Even MORE frequent, more aggressive beeps
+            const beepTimes = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.1, 1.25, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8];
+            
+            beepTimes.forEach(time => {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                // More varied, urgent frequencies
+                oscillator.frequency.setValueAtTime(
+                    600 + Math.random() * 1000, 
+                    audioCtx.currentTime + time
+                );
+                oscillator.type = Math.random() > 0.5 ? 'sine' : 'square';
+                
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime + time);
+                gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + time + 0.01); // Louder
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + time + 0.12);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start(audioCtx.currentTime + time);
+                oscillator.stop(audioCtx.currentTime + time + 0.12);
+                
+                chaosOscillators.push(oscillator);
+            });
+        }
+
+        // Phone rings - MORE phones
+        function playPhoneRings() {
+            if (!audioCtx) return;
+            
+            const ringTimes = [0.4, 1.2, 2.0, 2.5];
+            
+            ringTimes.forEach(startTime => {
+                for (let i = 0; i < 3; i++) {
+                    const time = audioCtx.currentTime + startTime + i * 0.15;
+                    
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.frequency.setValueAtTime(440, time);
+                    osc.frequency.setValueAtTime(880, time + 0.05);
+                    osc.type = 'sine';
+                    
+                    gain.gain.setValueAtTime(0.2, time); // Louder
+                    gain.gain.setValueAtTime(0.2, time + 0.08);
+                    gain.gain.linearRampToValueAtTime(0.001, time + 0.1);
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc.start(time);
+                    osc.stop(time + 0.1);
+                    
+                    chaosOscillators.push(osc);
+                }
+            });
+        }
+
+        // Keyboard typing clicks - MORE clicks
+        function playKeyboardClicks() {
+            if (!audioCtx) return;
+            
+            for (let i = 0; i < 60; i++) { // Increased from 40
+                const time = audioCtx.currentTime + Math.random() * 2.8;
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.frequency.setValueAtTime(4000 + Math.random() * 2000, time);
+                osc.type = 'square';
+                
+                gain.gain.setValueAtTime(0.08, time); // Louder
+                gain.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(time);
+                osc.stop(time + 0.02);
+                
+                chaosOscillators.push(osc);
+            }
+        }
+
+        function stopChaosSound() {
+            if (chaosNoiseNode) {
+                try {
+                    chaosNoiseNode.stop();
+                } catch(e) {}
+                chaosNoiseNode = null;
+            }
+            
+            chaosOscillators.forEach(osc => {
+                try {
+                    osc.stop();
+                } catch(e) {}
+            });
+            chaosOscillators = [];
+        }
+
+        // Transition whoosh sound
+        function playTransitionWhoosh() {
+            if (!audioCtx) return;
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 1);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 1);
+            
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+            
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 1);
+        }
+
+        // Simple yoga/meditation chime - peaceful and zen
+        function playRevealChime() {
+            if (!audioCtx) return;
+            
+            // Single pure tone - like a meditation bell
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            // Om frequency (136.1 Hz) or singing bowl (around 528 Hz)
+            osc.frequency.setValueAtTime(528, audioCtx.currentTime); // "Miracle tone"
+            osc.type = 'sine';
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime + 1);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 3);
+        }
+
+        // Simple yoga ambient - very minimal and peaceful
+        function playCalmAmbient() {
+            if (!audioCtx) return;
+            
+            // Single low drone - like a singing bowl resonance
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.frequency.setValueAtTime(136.1, audioCtx.currentTime); // Om frequency
+            osc.type = 'sine';
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime + 5);
+            gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 6.5);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 6.5);
+        }
+
+        // Scene timing (in milliseconds)
+        const scenes = [
+            { id: 'scene1', duration: 3000 },  // Chaos - 3 seconds
+            { id: 'scene2', duration: 2000 },  // Transition - 2 seconds
+            { id: 'scene3', duration: 4000 },  // IRCI reveal - 4 seconds
+            { id: 'scene4', duration: 5000 }   // CTA - 5 seconds (extended from 3)
+        ];
+
+        let currentScene = 0;
+        let timeline;
+
+        function playSequence() {
+            // Initialize audio on first interaction
+            initAudio();
+            
+            // Resume audio context if suspended
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            // Stop any existing sounds
+            stopChaosSound();
+            
+            // Hide replay button
+            document.getElementById('replayBtn').classList.remove('show');
+            
+            // Reset to first scene
+            currentScene = 0;
+            document.querySelectorAll('.scene').forEach(scene => {
+                scene.classList.remove('active');
+            });
+            document.getElementById('scene1').classList.add('active');
+
+            // Play through scenes
+            playNextScene();
+        }
+
+        function playNextScene() {
+            if (currentScene >= scenes.length) {
+                // Show replay button at the end
+                document.getElementById('replayBtn').classList.add('show');
+                return;
+            }
+
+            const scene = scenes[currentScene];
+            
+            // Activate current scene
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            document.getElementById(scene.id).classList.add('active');
+
+            // Play appropriate sound for each scene
+            if (scene.id === 'scene1') {
+                playChaosSound();
+            } else if (scene.id === 'scene2') {
+                stopChaosSound();
+                playTransitionWhoosh();
+            } else if (scene.id === 'scene3') {
+                playRevealChime();
+                setTimeout(() => playCalmAmbient(), 500);
+            }
+
+            // Schedule next scene
+            timeline = setTimeout(() => {
+                currentScene++;
+                playNextScene();
+            }, scene.duration);
+        }
+
+        // Replay button
+        document.getElementById('replayBtn').addEventListener('click', () => {
+            clearTimeout(timeline);
+            playSequence();
+        });
+
+        // Auto-start on load (requires user interaction for audio)
+        window.addEventListener('load', () => {
+            // Wait for user click to start (required for audio autoplay)
+            const startVideo = () => {
+                setTimeout(playSequence, 500);
+                document.removeEventListener('click', startVideo);
+            };
+            
+            // Auto-start video immediately, sound will play after first click
+            setTimeout(() => {
+                playSequence();
+            }, 500);
+            
+            // Also listen for any click to enable audio
+            document.addEventListener('click', () => {
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }, { once: true });
+        });
+
+        // Spacebar to replay
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                clearTimeout(timeline);
+                playSequence();
+            }
+        });
+    </script>
+</body>
+</html>
