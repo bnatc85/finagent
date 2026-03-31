@@ -465,9 +465,9 @@ if scan_button or auto_refresh:
                         direction_word = "rose" if avg_next > 0 else "fell"
                         st.markdown(
                             f"**Unusually positive news** ({len(pos_flags)} events observed): "
-                            f"When media coverage turned sharply optimistic, the stock {direction_word} "
+                            f"When media sentiment turned sharply optimistic, the stock price {direction_word} "
                             f"an average of **{abs(avg_next)*100:.2f}%** the next trading day. "
-                            f"On the spike day itself, the stock moved **{avg_same*100:+.2f}%** on average."
+                            f"On the spike day itself, the stock price moved **{avg_same*100:+.2f}%** on average."
                         )
                         for f in pos_flags:
                             ndr = f["next_day_return"]
@@ -476,7 +476,7 @@ if scan_button or auto_refresh:
                             st.caption(
                                 f"{emoji} **{f['date']}** — Sentiment surged to {f['sentiment']:.3f} "
                                 f"(Z = {f['z_score']:+.2f}) on {f['articles_that_day']} articles. "
-                                f"Same-day: {sdr*100:+.2f}%, Next-day: {ndr*100:+.2f}%"
+                                f"Stock price same-day: {sdr*100:+.2f}%, Stock price next-day: {ndr*100:+.2f}%"
                             )
 
                     # Negative spikes
@@ -486,9 +486,9 @@ if scan_button or auto_refresh:
                         direction_word = "bounced back" if avg_next > 0 else "continued falling"
                         st.markdown(
                             f"**Unusually negative news** ({len(neg_flags)} events observed): "
-                            f"When media coverage turned sharply pessimistic, the stock {direction_word} "
+                            f"When media sentiment turned sharply pessimistic, the stock price {direction_word} "
                             f"an average of **{abs(avg_next)*100:.2f}%** the next trading day. "
-                            f"On the spike day itself, the stock moved **{avg_same*100:+.2f}%** on average."
+                            f"On the spike day itself, the stock price moved **{avg_same*100:+.2f}%** on average."
                         )
                         for f in neg_flags:
                             ndr = f["next_day_return"]
@@ -497,7 +497,7 @@ if scan_button or auto_refresh:
                             st.caption(
                                 f"{emoji} **{f['date']}** — Sentiment dropped to {f['sentiment']:.3f} "
                                 f"(Z = {f['z_score']:+.2f}) on {f['articles_that_day']} articles. "
-                                f"Same-day: {sdr*100:+.2f}%, Next-day: {ndr*100:+.2f}%"
+                                f"Stock price same-day: {sdr*100:+.2f}%, Stock price next-day: {ndr*100:+.2f}%"
                             )
 
                     # Overall takeaway
@@ -510,9 +510,9 @@ if scan_button or auto_refresh:
                                           or f["direction"] == "POSITIVE" and f["next_day_return"] < 0) / len(all_next) * 100
 
                         st.info(
-                            f"**Bottom line for {ticker}:** Across {len(all_next)} historical spikes, "
-                            f"the price reversed direction **{reversal_pct:.0f}%** of the time the next day. "
-                            f"This {'suggests a reversal tendency — spikes may be overreactions.' if reversal_pct > 55 else 'suggests spikes sometimes carry momentum — exercise caution.' if reversal_pct < 45 else 'is roughly a coin flip — spikes alone are not reliable predictors.'}"
+                            f"**Bottom line for {ticker}:** Across {len(all_next)} historical sentiment spikes, "
+                            f"the stock price reversed direction **{reversal_pct:.0f}%** of the time the next trading day. "
+                            f"This {'suggests a reversal tendency — sentiment spikes may be overreactions that the stock price corrects.' if reversal_pct > 55 else 'suggests sentiment spikes sometimes carry momentum into the stock price — exercise caution.' if reversal_pct < 45 else 'is roughly a coin flip — sentiment spikes alone are not reliable predictors of stock price direction.'}"
                         )
 
                 else:
