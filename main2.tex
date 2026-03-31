@@ -488,7 +488,7 @@ Figure~\ref{fig:volumesent} depicts media volume versus descriptive sentiment--r
 \begin{figure*}[t!]
     \centering
     \includegraphics[width=.95\linewidth]{plots/sector_heatmap.png}
-    \caption{Heatmap of sentiment--return association measures across fourteen equities grouped by sector. Warmer colors indicate stronger positive association; cooler colors indicate negative association.}
+    \caption{Heatmap of sentiment--return association measures across fourteen equities grouped by sector. Columns from left to right: \textbf{Same-Day $\rho$}, the Pearson correlation between daily aggregated sentiment and same-day log returns; \textbf{Lag-1 $\rho$}, the correlation between prior-day sentiment and current-day returns (positive values suggest sentiment predicts next-day movement); \textbf{Lag-2 $\rho$}, the correlation at a two-day lag; \textbf{$\beta_k$}, the coefficient on lagged sentiment in the market-controlled regression (Eq.~\ref{eq:controlled_reg}), capturing whether sentiment predicts next-day returns after removing broad market movement; and \textbf{$R^2$}, the overall explanatory power of the market-controlled regression (dominated by the market factor $\gamma_k$ for most equities). Warmer colors (red) indicate stronger positive values; cooler colors (blue) indicate negative values. Semiconductor stocks (NVDA, AMD) show the warmest same-day $\rho$ values, while the $R^2$ column reveals that JNJ is uniquely decoupled from both sentiment and market movement.}
     \label{fig:sector_heatmap}
 \end{figure*}
 
