@@ -33,6 +33,7 @@ def get_secret(key):
         return None
 
 FINNHUB_API_KEY = get_secret("FINNHUB_API_KEY")
+_FINNHUB_MISSING = not FINNHUB_API_KEY
 
 TICKERS = ["AAPL", "GOOGL", "AMZN", "TSLA", "NVDA", "MSFT",
            "META", "JPM", "JNJ", "XOM", "WMT", "BA", "DIS", "AMD"]
@@ -86,6 +87,8 @@ def _load_anomaly_flags():
 
 def fetch_news(ticker, days_back=1):
     """Fetch recent news from Finnhub."""
+    if not FINNHUB_API_KEY:
+        return [], "no_api_key"
     today = datetime.now().strftime("%Y-%m-%d")
     start = (datetime.now() - timedelta(days=days_back)).strftime("%Y-%m-%d")
     url = "https://finnhub.io/api/v1/company-news"
@@ -94,8 +97,13 @@ def fetch_news(ticker, days_back=1):
         resp = requests.get(url, params=params, timeout=15)
         if resp.status_code == 429:
             return [], "rate_limited"
+        if resp.status_code == 401 or resp.status_code == 403:
+            return [], f"auth_error_{resp.status_code}"
         resp.raise_for_status()
-        return resp.json(), "ok"
+        data = resp.json()
+        if not isinstance(data, list):
+            return [], f"unexpected_response: {str(data)[:100]}"
+        return data, "ok"
     except Exception as e:
         return [], str(e)
 
@@ -155,7 +163,28 @@ with st.sidebar:
     st.divider()
     st.markdown("**Formula:**")
     st.latex(r"Z_{k,t} = \frac{S_{k,t} - \mu_{k,t}^{(w)}}{\sigma_{k,t}^{(w)}}")
-    st.caption("Rolling window w=20 trading days")
+    with st.expander("What does this mean?"):
+        st.markdown("""
+        **Z** = the anomaly score (how unusual today's sentiment is)
+
+        | Variable | Meaning |
+        |----------|---------|
+        | **Z_{k,t}** | The anomaly score for stock *k* on day *t*. Values above +2 or below -2 are flagged. |
+        | **S_{k,t}** | Today's sentiment score — the average emotional tone of all news articles about this stock today, measured on a scale from -1 (very negative) to +1 (very positive). |
+        | **μ_{k,t}^(w)** | The rolling average sentiment over the past *w* trading days (default: 20). This is what "normal" looks like for this stock. |
+        | **σ_{k,t}^(w)** | The rolling standard deviation — how much sentiment typically varies day-to-day. A stock with wild media swings has a high σ. |
+        | **w** | The lookback window (20 trading days ≈ 1 month). |
+
+        **In plain English:** Take today's sentiment, subtract the recent average,
+        and divide by how much sentiment normally varies. If the result is bigger
+        than 2 (or smaller than -2), the news tone is far outside the normal
+        range and worth investigating.
+
+        **Example:** If a stock normally has sentiment around +0.20 (mildly positive)
+        with day-to-day swings of about 0.10, and today's sentiment is -0.15,
+        the Z-score would be (-0.15 - 0.20) / 0.10 = **-3.5** — a major negative
+        anomaly.
+        """)
 
     st.divider()
     auto_refresh = st.toggle("Auto-refresh (60s)", value=False)
@@ -163,6 +192,12 @@ with st.sidebar:
 
 # Load baselines
 baselines = load_baselines()
+
+# API key warning
+if _FINNHUB_MISSING:
+    st.error("**Finnhub API key not found.** Live scanning will not work. "
+             "Add `FINNHUB_API_KEY` to your Streamlit secrets "
+             "(Settings > Secrets) or `.env` file.")
 
 if not baselines:
     st.warning("No baseline data found. The monitor will operate without historical baselines "
@@ -191,17 +226,27 @@ if scan_button or auto_refresh:
             continue
 
         articles, status = fetch_news(ticker, days_back)
+        if status == "no_api_key":
+            results.append({"Ticker": ticker, "Sector": SECTOR[ticker],
+                           "Status": "🔑 No API key", "Sentiment": None,
+                           "Z-Score": None, "Articles": 0})
+            continue
         if status == "rate_limited":
             results.append({"Ticker": ticker, "Sector": SECTOR[ticker],
                            "Status": "⏳ Rate limited", "Sentiment": None,
                            "Z-Score": None, "Articles": 0})
             time.sleep(2)
             continue
+        if status not in ("ok",):
+            results.append({"Ticker": ticker, "Sector": SECTOR[ticker],
+                           "Status": f"❌ {status}", "Sentiment": None,
+                           "Z-Score": None, "Articles": 0})
+            continue
 
         sentiment, scored_details = score_articles(articles)
         if sentiment is None:
             results.append({"Ticker": ticker, "Sector": SECTOR[ticker],
-                           "Status": "— No articles", "Sentiment": None,
+                           "Status": f"— No articles ({len(articles)} raw)", "Sentiment": None,
                            "Z-Score": None, "Articles": 0})
             continue
 
@@ -319,27 +364,88 @@ if scan_button or auto_refresh:
                 hist = baselines[ticker]["history"].copy()
                 hist = hist.sort_values("date")
 
+                # Load price data for this ticker
+                price_path = DATA_DIR / ticker / "prices.csv"
+                prices = None
+                if price_path.exists():
+                    prices = pd.read_csv(price_path, parse_dates=["date"]).sort_values("date")
+                    # Filter prices to sentiment date range
+                    prices = prices[(prices["date"] >= hist["date"].min()) &
+                                    (prices["date"] <= hist["date"].max())]
+
                 import matplotlib.pyplot as plt
-                fig, ax = plt.subplots(figsize=(8, 2.5))
-                ax.plot(hist["date"], hist["sentiment_trimmed_mean"],
-                       color="#1f77b4", linewidth=1)
-                ax.axhline(baselines[ticker]["mean"], color="green",
-                          linestyle="--", linewidth=0.7, label=f"Mean ({baselines[ticker]['mean']:.3f})")
-                ax.axhline(baselines[ticker]["mean"] + z_threshold * baselines[ticker]["std"],
-                          color="red", linestyle=":", linewidth=0.7, label=f"+{z_threshold}σ")
-                ax.axhline(baselines[ticker]["mean"] - z_threshold * baselines[ticker]["std"],
-                          color="red", linestyle=":", linewidth=0.7, label=f"-{z_threshold}σ")
-                ax.fill_between(hist["date"],
-                               baselines[ticker]["mean"] - z_threshold * baselines[ticker]["std"],
-                               baselines[ticker]["mean"] + z_threshold * baselines[ticker]["std"],
-                               alpha=0.1, color="green")
-                ax.set_ylabel("Sentiment")
-                ax.set_title(f"{ticker} — Historical Sentiment with Anomaly Bands", fontsize=10)
-                ax.legend(fontsize=7, loc="upper left")
-                plt.xticks(rotation=30)
-                plt.tight_layout()
-                st.pyplot(fig)
-                plt.close(fig)
+
+                # Combined chart: price + sentiment + anomaly bands
+                if prices is not None and not prices.empty:
+                    fig, (ax_price, ax_sent) = plt.subplots(2, 1, figsize=(8, 4.5),
+                                                             sharex=True, gridspec_kw={"height_ratios": [1.2, 1]})
+
+                    # Top: Stock price
+                    ax_price.plot(prices["date"], prices["close"], color="#1f77b4", linewidth=1.2)
+                    ax_price.fill_between(prices["date"], prices["close"], alpha=0.08, color="#1f77b4")
+                    ax_price.set_ylabel("Close Price ($)")
+                    ax_price.set_title(f"{ticker} — Stock Price & Sentiment", fontsize=10, fontweight="bold")
+                    ax_price.grid(axis="y", alpha=0.2)
+
+                    # Mark spike days on price chart
+                    ticker_flags_for_marks = [f for f in _load_anomaly_flags() if f["ticker"] == ticker]
+                    for flag in ticker_flags_for_marks:
+                        flag_date = pd.Timestamp(flag["date"])
+                        price_on_day = prices[prices["date"] == flag_date]
+                        if not price_on_day.empty:
+                            color = "#d62728" if flag["direction"] == "NEGATIVE" else "#2ca02c"
+                            marker = "v" if flag["direction"] == "NEGATIVE" else "^"
+                            ax_price.scatter(flag_date, price_on_day["close"].iloc[0],
+                                           color=color, marker=marker, s=60, zorder=5,
+                                           edgecolors="white", linewidths=0.5)
+
+                    # Bottom: Sentiment with anomaly bands
+                    ax_sent.plot(hist["date"], hist["sentiment_trimmed_mean"],
+                               color="#d4a017", linewidth=1)
+                    ax_sent.axhline(baselines[ticker]["mean"], color="green",
+                                  linestyle="--", linewidth=0.7, label=f"Mean ({baselines[ticker]['mean']:.3f})")
+                    ax_sent.axhline(baselines[ticker]["mean"] + z_threshold * baselines[ticker]["std"],
+                                  color="red", linestyle=":", linewidth=0.7, label=f"+{z_threshold}σ")
+                    ax_sent.axhline(baselines[ticker]["mean"] - z_threshold * baselines[ticker]["std"],
+                                  color="red", linestyle=":", linewidth=0.7, label=f"-{z_threshold}σ")
+                    ax_sent.fill_between(hist["date"],
+                                   baselines[ticker]["mean"] - z_threshold * baselines[ticker]["std"],
+                                   baselines[ticker]["mean"] + z_threshold * baselines[ticker]["std"],
+                                   alpha=0.1, color="green")
+                    ax_sent.set_ylabel("Sentiment")
+                    ax_sent.set_xlabel("Date")
+                    ax_sent.legend(fontsize=7, loc="upper left")
+                    ax_sent.grid(axis="y", alpha=0.2)
+
+                    plt.xticks(rotation=30)
+                    plt.tight_layout()
+                    st.pyplot(fig)
+                    plt.close(fig)
+
+                    st.caption("Top: closing price with spike markers (▲ positive spike, ▼ negative spike). "
+                              "Bottom: daily sentiment with anomaly bands (green = normal range).")
+                else:
+                    # Fallback: sentiment only
+                    fig, ax = plt.subplots(figsize=(8, 2.5))
+                    ax.plot(hist["date"], hist["sentiment_trimmed_mean"],
+                           color="#1f77b4", linewidth=1)
+                    ax.axhline(baselines[ticker]["mean"], color="green",
+                              linestyle="--", linewidth=0.7, label=f"Mean ({baselines[ticker]['mean']:.3f})")
+                    ax.axhline(baselines[ticker]["mean"] + z_threshold * baselines[ticker]["std"],
+                              color="red", linestyle=":", linewidth=0.7, label=f"+{z_threshold}σ")
+                    ax.axhline(baselines[ticker]["mean"] - z_threshold * baselines[ticker]["std"],
+                              color="red", linestyle=":", linewidth=0.7, label=f"-{z_threshold}σ")
+                    ax.fill_between(hist["date"],
+                                   baselines[ticker]["mean"] - z_threshold * baselines[ticker]["std"],
+                                   baselines[ticker]["mean"] + z_threshold * baselines[ticker]["std"],
+                                   alpha=0.1, color="green")
+                    ax.set_ylabel("Sentiment")
+                    ax.set_title(f"{ticker} — Historical Sentiment with Anomaly Bands", fontsize=10)
+                    ax.legend(fontsize=7, loc="upper left")
+                    plt.xticks(rotation=30)
+                    plt.tight_layout()
+                    st.pyplot(fig)
+                    plt.close(fig)
 
                 # --- Spike history commentary ---
                 ticker_flags = [f for f in anomaly_flags if f["ticker"] == ticker]
