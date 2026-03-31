@@ -430,6 +430,65 @@ if scan_button or auto_refresh:
 
                     st.caption("Top: closing price with spike markers (▲ positive spike, ▼ negative spike). "
                               "Bottom: daily sentiment with anomaly bands (green = normal range).")
+
+                    # --- Sentiment-Price Alignment Metrics ---
+                    # Compute correlation between sentiment and log returns
+                    merged_for_corr = hist.merge(
+                        prices[["date", "close"]].assign(
+                            log_return=np.log(prices["close"] / prices["close"].shift(1))
+                        ),
+                        on="date", how="inner"
+                    ).dropna(subset=["sentiment_trimmed_mean", "log_return"])
+
+                    if len(merged_for_corr) >= 5:
+                        from scipy import stats as sp_stats
+                        rho, p_val = sp_stats.pearsonr(
+                            merged_for_corr["sentiment_trimmed_mean"],
+                            merged_for_corr["log_return"]
+                        )
+
+                        # Determine alignment level
+                        if abs(rho) >= 0.30:
+                            level = "Strong"
+                            level_color = "🟢" if rho > 0 else "🔴"
+                            explanation = ("Media sentiment and stock price move **in the same direction** "
+                                         "to a meaningful degree. When news tone improves, the stock tends to rise, "
+                                         "and vice versa. This stock may be more susceptible to sentiment-driven trading."
+                                         if rho > 0 else
+                                         "Media sentiment and stock price move **in opposite directions**. "
+                                         "Positive news tends to coincide with price drops — possibly a contrarian "
+                                         "investor base or 'sell the news' dynamic.")
+                        elif abs(rho) >= 0.15:
+                            level = "Moderate"
+                            level_color = "🟡"
+                            explanation = ("There is a **weak-to-moderate link** between media sentiment and stock price. "
+                                         "Sentiment may play a role in short-term moves, but other factors (earnings, "
+                                         "macro trends, sector rotation) dominate.")
+                        else:
+                            level = "Weak"
+                            level_color = "⚪"
+                            explanation = ("Media sentiment has **little observable relationship** with this stock's "
+                                         "price movements. This stock's price is likely driven by fundamentals, "
+                                         "commodity prices, or institutional flows rather than media narrative.")
+
+                        st.markdown("---")
+                        st.markdown(f"#### {level_color} Sentiment-Price Alignment: **{level}**")
+
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Correlation (ρ)", f"{rho:+.2f}",
+                                     help="Pearson correlation between daily sentiment and daily stock returns. "
+                                          "+1 = perfect alignment, 0 = no relationship, -1 = opposite.")
+                        with col2:
+                            sig = "Yes" if p_val < 0.05 else "Marginal" if p_val < 0.10 else "No"
+                            st.metric("Statistically Significant?", sig,
+                                     help=f"p-value = {p_val:.4f}. Below 0.05 means the relationship is "
+                                          "unlikely to be due to chance.")
+                        with col3:
+                            st.metric("Observations", f"{len(merged_for_corr)} days",
+                                     help="Number of trading days with both sentiment and price data.")
+
+                        st.markdown(explanation)
                 else:
                     # Fallback: sentiment only
                     fig, ax = plt.subplots(figsize=(8, 2.5))
