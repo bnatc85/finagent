@@ -492,6 +492,57 @@ Figure~\ref{fig:volumesent} depicts media volume versus descriptive sentiment--r
     \label{fig:sector_heatmap}
 \end{figure*}
 
+\subsection{Sentiment--Price Alignment Classification}
+
+To provide a practical summary of how closely each stock's price movements track media sentiment, we classify the fourteen equities into three alignment tiers based on the magnitude of the same-day Pearson correlation and the excess-return correlation. Table~\ref{tab:alignment} reports these classifications alongside both raw and market-adjusted correlations.
+
+\begin{table*}[t!]
+\centering
+\caption{Sentiment--Price Alignment Classification. $\rho$ denotes same-day Pearson correlation between daily aggregated sentiment and daily log returns. $\rho^{\mathrm{ex}}$ denotes the correlation with excess returns (stock return minus SPY return). Alignment tiers: \textbf{Strong} ($|\rho| \geq 0.30$), \textbf{Moderate} ($0.15 \leq |\rho| < 0.30$), \textbf{Weak} ($|\rho| < 0.15$).}
+\label{tab:alignment}
+\begin{tabular}{llccccl}
+\toprule
+\textbf{Sector} & \textbf{Stock} & \textbf{$\rho$} & \textbf{$p$-value} & \textbf{$\rho^{\mathrm{ex}}$} & \textbf{$p$-value} & \textbf{Alignment} \\
+\midrule
+\multirow{5}{*}{Tech}  & AAPL  & $+0.22$ & $0.209$ & $+0.36$ & $0.032^{*}$ & Moderate \\
+                        & GOOGL & $-0.05$ & $0.788$ & $-0.33$ & $0.049^{*}$ & Weak \\
+                        & AMZN  & $+0.10$ & $0.541$ & $+0.13$ & $0.422$ & Weak \\
+                        & MSFT  & $+0.19$ & $0.263$ & $+0.06$ & $0.723$ & Moderate \\
+                        & META  & $+0.11$ & $0.522$ & $+0.25$ & $0.123$ & Weak \\
+\midrule
+\multirow{2}{*}{Semi}  & NVDA  & $+0.36$ & $0.039^{*}$ & $+0.34$ & $0.052^{\dagger}$ & Strong \\
+                        & AMD   & $+0.32$ & $0.054^{\dagger}$ & $+0.34$ & $0.038^{*}$ & Strong \\
+\midrule
+Auto   & TSLA  & $+0.05$ & $0.771$ & $+0.16$ & $0.347$ & Weak \\
+\midrule
+Finance & JPM  & $-0.19$ & $0.262$ & $+0.06$ & $0.734$ & Moderate \\
+\midrule
+Health & JNJ   & $-0.08$ & $0.621$ & $+0.20$ & $0.228$ & Weak \\
+\midrule
+Energy & XOM   & $+0.00$ & $0.988$ & $+0.11$ & $0.515$ & Weak \\
+\midrule
+Consumer & WMT & $+0.05$ & $0.789$ & $-0.07$ & $0.677$ & Weak \\
+\midrule
+Industrial & BA & $+0.17$ & $0.307$ & $+0.13$ & $0.439$ & Moderate \\
+\midrule
+Media  & DIS   & $+0.30$ & $0.065^{\dagger}$ & $+0.23$ & $0.168$ & Strong \\
+\bottomrule
+\multicolumn{7}{l}{\small $^{*}p < 0.05$; $^{\dagger}p < 0.10$}
+\end{tabular}
+\end{table*}
+
+Three patterns emerge from the alignment classification:
+
+\begin{itemize}
+    \item \textbf{Strong alignment} (NVDA, AMD, DIS): These equities exhibit same-day correlations of $|\rho| \geq 0.30$, and the semiconductor stocks maintain this alignment even after removing market-wide movement. These are \textit{narrative-sensitive} stocks whose valuations depend heavily on forward-looking stories (AI growth for semiconductors, streaming dynamics for Disney) and that attract substantial retail investor participation.
+
+    \item \textbf{Moderate alignment} (AAPL, MSFT, JPM, BA): These equities show correlations in the $0.15$--$0.30$ range. Notably, Apple's alignment strengthens substantially when measured against excess returns ($\rho^{\mathrm{ex}} = +0.36$, $p = 0.032$), suggesting that its sentiment--return link is partially masked by broad market movement. JPMorgan's negative raw correlation ($\rho = -0.19$) vanishes after market adjustment ($\rho^{\mathrm{ex}} = +0.06$), indicating that its apparent contrarian pattern is an artifact of market-wide dynamics rather than a genuine sentiment effect.
+
+    \item \textbf{Weak alignment} (GOOGL, AMZN, META, TSLA, JNJ, XOM, WMT): These equities show $|\rho| < 0.15$, indicating that media sentiment has little observable relationship with their short-horizon price movements. For TSLA, this is consistent with the noise-discounting interpretation: despite the second-highest media volume, the stock's price behavior is dominated by its extreme market beta ($\gamma = 2.04$) rather than sentiment signals. For JNJ, XOM, and WMT, the weak alignment reflects sector-specific information environments in which returns are driven by factors orthogonal to media tone.
+\end{itemize}
+
+The alignment classification provides a practical framework for assessing which equities may be more susceptible to sentiment-driven price dynamics and, by extension, to potential manipulation through coordinated media narratives. Strong-alignment stocks represent the highest-priority targets for the sentiment anomaly monitoring system described in Section~\ref{sec:data_method}.
+
 \subsection{Lagged Association Results}
 Table~\ref{tab:lagged_results} reports same-day and lagged sentiment--return associations for each stock. Compared with contemporaneous correlation, the lagged estimates provide a clearer view of whether sentiment precedes subsequent return behavior.
 
