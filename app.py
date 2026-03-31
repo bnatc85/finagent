@@ -93,19 +93,25 @@ def fetch_news(ticker, days_back=1):
     start = (datetime.now() - timedelta(days=days_back)).strftime("%Y-%m-%d")
     url = "https://finnhub.io/api/v1/company-news"
     params = {"symbol": ticker, "from": start, "to": today, "token": FINNHUB_API_KEY}
-    try:
-        resp = requests.get(url, params=params, timeout=15)
-        if resp.status_code == 429:
-            return [], "rate_limited"
-        if resp.status_code == 401 or resp.status_code == 403:
-            return [], f"auth_error_{resp.status_code}"
-        resp.raise_for_status()
-        data = resp.json()
-        if not isinstance(data, list):
-            return [], f"unexpected_response: {str(data)[:100]}"
-        return data, "ok"
-    except Exception as e:
-        return [], str(e)
+    for attempt in range(2):
+        try:
+            resp = requests.get(url, params=params, timeout=20)
+            if resp.status_code == 429:
+                return [], "rate_limited"
+            if resp.status_code in (401, 403):
+                return [], f"auth_error_{resp.status_code}"
+            resp.raise_for_status()
+            data = resp.json()
+            if not isinstance(data, list):
+                return [], f"unexpected_response: {str(data)[:100]}"
+            return data, "ok"
+        except requests.exceptions.Timeout:
+            if attempt == 0:
+                time.sleep(2)
+                continue
+            return [], "timeout"
+        except Exception as e:
+            return [], str(e)
 
 
 def score_articles(articles):
